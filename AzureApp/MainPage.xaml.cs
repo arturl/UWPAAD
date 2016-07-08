@@ -93,6 +93,15 @@ namespace AzureApp
                 {
                     detailList.Items.Add("    Subscription Name: {0}".FormatInvariant(subscription.DisplayName));
                     detailList.Items.Add("    Subscription Id: {0}".FormatInvariant(subscription.SubscriptionId));
+
+                    var iothubs = await this.GetIoTHubs(subscription.SubscriptionId);
+
+                    foreach (var iothub in iothubs)
+                    {
+                        detailList.Items.Add("      IoT Hub Name: {0}".FormatInvariant(iothub.Name));
+                        detailList.Items.Add("      Location: {0}".FormatInvariant(iothub.Location));
+                    }
+
                     var resourceGroups = await this.GetResourceGroups(subscription.SubscriptionId);
                     foreach (var resourceGroup in resourceGroups)
                     {
@@ -111,6 +120,11 @@ namespace AzureApp
         async Task<IEnumerable<Subscription>> GetSubscriptions()
         {
             return (await this.GetAzureResource<ODataResponse<Subscription>>("subscriptions")).Value.Where(sub => sub.State.Equals("Enabled", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<IEnumerable<IoTHub>> GetIoTHubs(string subscriptionId)
+        {
+            return (await this.GetAzureResource<ODataResponse<IoTHub>>("subscriptions/{0}/providers/Microsoft.Devices/IotHubs".FormatInvariant(subscriptionId), "2016-02-03")).Value;
         }
 
         public async Task<IEnumerable<ResourceGroup>> GetResourceGroups(string subscriptionId)
